@@ -1,0 +1,16 @@
+services:
+  mysql-db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: hstar1!
+      MYSQL_DATABASE: hstar-db
+      MYSQL_USER: hstar-user
+      MYSQL_PASSWORD: hstar1!
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
