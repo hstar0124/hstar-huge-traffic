@@ -3,11 +3,13 @@ package com.hstar.backend.handler;
 import com.hstar.backend.dto.ApiResponse;
 import com.hstar.backend.exception.AuthenticationFailedException;
 import com.hstar.backend.exception.InvalidTokenException;
+import com.hstar.backend.exception.RateLimitException;
 import com.hstar.backend.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
@@ -39,6 +41,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(null, "Authentication failed: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<ApiResponse<String>> handleResourceNotFoundException(RateLimitException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ApiResponse<>(null, "Forbidden Request : " + ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
