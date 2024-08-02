@@ -5,6 +5,7 @@ import com.hstar.backend.dto.WriteArticleDto;
 import com.hstar.backend.entity.Article;
 import com.hstar.backend.entity.Board;
 import com.hstar.backend.entity.User;
+import com.hstar.backend.exception.ForbiddenException;
 import com.hstar.backend.exception.RateLimitException;
 import com.hstar.backend.exception.ResourceNotFoundException;
 import com.hstar.backend.repository.ArticleRepository;
@@ -86,6 +87,9 @@ public class ArticleService {
         if (article.isEmpty()) {
             throw new ResourceNotFoundException("article not found");
         }
+        if (article.get().getAuthor() != author.get()) {
+            throw new ForbiddenException("article author different");
+        }
         if (!this.isCanEditArticle()) {
             throw new RateLimitException("article not edited by rate limit");
         }
@@ -98,6 +102,37 @@ public class ArticleService {
         articleRepository.save(article.get());
         return article.get();
     }
+
+    public boolean deleteArticle(Long boardId, Long articleId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Optional<User> author = userRepository.findByUsername(userDetails.getUsername());
+        Optional<Board> board = boardRepository.findById(boardId);
+        if (author.isEmpty()) {
+            throw new ResourceNotFoundException("author not found");
+        }
+        if (board.isEmpty()) {
+            throw new ResourceNotFoundException("board not found");
+        }
+        Optional<Article> article = articleRepository.findById(articleId);
+        if (article.isEmpty()) {
+            throw new ResourceNotFoundException("article not found");
+        }
+        if (article.get().getAuthor() != author.get()) {
+            throw new ForbiddenException("article author different");
+        }
+        if (!this.isCanEditArticle()) {
+            throw new RateLimitException("article not edited by rate limit");
+        }
+        
+        // Soft Delete 방식으로 삭제
+        // Flag 방식이 편리하지만, 휴면 에러로 노출이 될 가능성도 있다.(매번 delete flag를 체크해야함)
+        // 테이블을 따로 두게 되는경우 트랜젝션 처리가 필요해야함으로 더 복잡해질 수 있음
+        article.get().setIsDeleted(true);
+        articleRepository.save(article.get());
+        return true;
+    }
+
 
     private boolean isCanWriteArticle() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -67,4 +67,15 @@ public class ArticleController {
         return ResponseEntity.ok(new ApiResponse<>(editedArticle, "Article edited successfully"));
 
     }
+
+    @DeleteMapping("/{boardId}/articles/{articleId}")
+    public ResponseEntity<ApiResponse<Boolean>> deleteArticle(
+            @Parameter(description = "ID of the board", required = true)
+            @PathVariable("boardId") Long boardId,
+            @Parameter(description = "ID of the article", required = true)
+            @PathVariable("articleId") Long articleId) {
+        boolean isDeleted = articleService.deleteArticle(boardId, articleId);
+        String message = isDeleted ? "Article deleted successfully" : "Failed to delete article";
+        return ResponseEntity.ok(new ApiResponse<>(isDeleted, message));
+    }
 }
